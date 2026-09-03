@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 class MonitorService : Service() {
 
@@ -170,12 +171,14 @@ class MonitorService : Service() {
         val warnHours = Prefs.getWarnHours(this)
         val restHours = Prefs.getRestHours(this)
 
-        val warnHorasInt = warnHours.toInt()
-        val warnMinInt = ((warnHours - warnHorasInt) * 60).toInt()
+        val warnTotalMinutos = (warnHours * 60).roundToInt()
+        val warnHorasInt = warnTotalMinutos / 60
+        val warnMinInt = warnTotalMinutos % 60
         val warnTexto = if (warnMinInt == 0) "${warnHorasInt}H" else "${warnHorasInt}H ${warnMinInt}MIN"
 
-        val restHorasInt = restHours.toInt()
-        val restMinInt = ((restHours - restHorasInt) * 60).toInt()
+        val restTotalMinutos = (restHours * 60).roundToInt()
+        val restHorasInt = restTotalMinutos / 60
+        val restMinInt = restTotalMinutos % 60
         val restTexto = if (restMinInt == 0) "${restHorasInt}h" else "${restHorasInt}h ${restMinInt}min"
 
         val titulo = "⚠️ PROJETOR LIGADO HÁ $warnTexto ⚠️"
