@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var txtHudMode: TextView
     private lateinit var txtHudDur: TextView
 
-    private val stepHours = 0.5f
+    private val stepHours = 10f / 60f
     private val handler = Handler(Looper.getMainLooper())
 
     private val refreshRunnable = object : Runnable {
@@ -478,13 +478,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun ajustarWarn(delta: Float) {
-        val novo = (Prefs.getWarnHours(this) + delta).coerceIn(0.5f, 24f)
+        val novo = (Prefs.getWarnHours(this) + delta).coerceIn(stepHours, 24f)
         Prefs.setWarnHours(this, novo)
         atualizarTextos()
     }
 
     private fun ajustarRest(delta: Float) {
-        val novo = (Prefs.getRestHours(this) + delta).coerceIn(0.5f, 24f)
+        val novo = (Prefs.getRestHours(this) + delta).coerceIn(stepHours, 24f)
         Prefs.setRestHours(this, novo)
         atualizarTextos()
     }
