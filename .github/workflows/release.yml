@@ -1,0 +1,47 @@
+name: Gerar APK de atualização
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão, por exemplo v1.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION_NAME: ${{ inputs.version || github.ref_name }}
+      VERSION_CODE: ${{ github.run_number }}
+      KEYSTORE_PATH: ${{ runner.temp }}/temporizador-v2.jks
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Recuperar chave de assinatura
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_PATH"
+
+      - name: Gerar APK assinado
+        run: ./gradlew :app:assembleRelease
+
+      - name: Publicar no GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.version || github.ref_name }}
+        run: gh release create "$RELEASE_TAG" "app/build/outputs/apk/release/app-release.apk#TemporizadorV2.apk" --generate-notes
