@@ -20,7 +20,6 @@ jobs:
     env:
       VERSION_NAME: ${{ inputs.version || github.ref_name }}
       VERSION_CODE: ${{ github.run_number }}
-      KEYSTORE_PATH: ${{ runner.temp }}/temporizador-v2.jks
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -35,10 +34,12 @@ jobs:
           java-version: "17"
 
       - name: Recuperar chave de assinatura
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$KEYSTORE_PATH"
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/temporizador-v2.jks"
 
       - name: Gerar APK assinado
         run: ./gradlew :app:assembleRelease
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/temporizador-v2.jks
 
       - name: Publicar no GitHub
         env:
