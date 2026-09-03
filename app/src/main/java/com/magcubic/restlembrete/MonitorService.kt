@@ -24,7 +24,7 @@ class MonitorService : Service() {
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private var warningShowing = false
+    private var warningShowing = false; private var testPending = false
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     private var clockVisibleUntilMs = 0L
@@ -55,10 +55,10 @@ class MonitorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_TRIGGER_TEST) {
+        if (intent?.action == ACTION_TRIGGER_TEST) { if (warningShowing || testPending) return START_STICKY; testPending = true
             handler.postDelayed({
-                showWarningOverlay(isTest = true)
-            }, 8_000)
+                if (!warningShowing) showWarningOverlay(isTest = true) else testPending = false
+            }, 8_000); return START_STICKY
         } else if (intent?.action == ACTION_UPDATE_HUD) {
             updateHudState()
         }
@@ -72,7 +72,7 @@ class MonitorService : Service() {
         return START_STICKY
     }
 
-    private fun checkState() {
+    private fun checkState() { if (testPending) return
         val now = System.currentTimeMillis()
         val snoozeUntil = Prefs.getSnoozeUntil(this)
         if (snoozeUntil > now) return
@@ -213,7 +213,7 @@ class MonitorService : Service() {
         Prefs.setSnoozeUntil(this, System.currentTimeMillis() + (minutos * 60 * 1000L))
     }
 
-    private fun onUserChoseFecharTeste() {
+    private fun onUserChoseFecharTeste() { testPending = false
         warningShowing = false
     }
 
