@@ -22,9 +22,19 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
+
+    private val importarHistorico = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val texto = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            val importou = texto != null && Prefs.importarHistorico(this, texto)
+            Toast.makeText(this, if (importou) "✅ Histórico do V1 importado!" else "⚠️ Esse arquivo não é um histórico válido.", Toast.LENGTH_LONG).show()
+            if (importou) atualizarTextos()
+        }
+    }
 
     private lateinit var txtWarn: TextView
     private lateinit var txtRest: TextView
@@ -320,6 +330,9 @@ class MainActivity : AppCompatActivity() {
                 atualizarStatus()
             }
         }
+        val btnImportarHistorico = criarBotaoTv("📥 Importar Histórico do V1").apply {
+            setOnClickListener { importarHistorico.launch(arrayOf("application/json", "text/plain")) }
+        }
 
         val btnAtualizar = criarBotaoTv("⬆️ Procurar Atualização").apply {
             setOnClickListener { verificarAtualizacao(mostrarResultado = true) }
@@ -336,6 +349,7 @@ class MainActivity : AppCompatActivity() {
         aplicarMargem(btnIniciar)
         aplicarMargem(btnTeste10s)
         aplicarMargem(btnZerarMemoria)
+        aplicarMargem(btnImportarHistorico)
         aplicarMargem(btnAtualizar)
 
         layout.addView(titulo)
@@ -364,6 +378,7 @@ class MainActivity : AppCompatActivity() {
         layout.addView(btnIniciar)
         layout.addView(btnTeste10s)
         layout.addView(btnZerarMemoria)
+        layout.addView(btnImportarHistorico)
         layout.addView(btnAtualizar)
 
         scroll.addView(layout)

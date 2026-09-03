@@ -8,7 +8,11 @@ import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.WindowManager
@@ -20,6 +24,12 @@ object OverlayHelper {
 
     private var hudRightView: TextView? = null
     private var hudLeftView: TextView? = null
+
+    private fun tocarAlerta() {
+        val tom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
+        tom.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1_200)
+        Handler(Looper.getMainLooper()).postDelayed({ tom.release() }, 1_300)
+    }
 
     private fun criarBotaoTv(
         context: Context,
@@ -189,6 +199,7 @@ object OverlayHelper {
         onFecharTeste: () -> Unit = {}
     ) {
         try {
+            tocarAlerta()
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
             val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)

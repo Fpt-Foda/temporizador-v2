@@ -1,6 +1,7 @@
 package com.magcubic.restlembrete
 
 import android.content.Context
+import org.json.JSONObject
 
 object Prefs {
     private const val FILE = "rest_prefs"
@@ -64,4 +65,14 @@ object Prefs {
     // Margem em pixels até o limite da tela (0 = encostado no limite)
     fun getHudMargin(ctx: Context): Int = prefs(ctx).getInt(KEY_HUD_MARGIN_OFFSET, 0)
     fun setHudMargin(ctx: Context, margin: Int) = prefs(ctx).edit().putInt(KEY_HUD_MARGIN_OFFSET, margin.coerceIn(0, 100)).apply()
+
+    fun importarHistorico(ctx: Context, texto: String): Boolean = try {
+        val json = JSONObject(texto)
+        setUsedSeconds(ctx, json.getLong(KEY_USED_SECONDS)); setLastHeartbeat(ctx, json.getLong(KEY_LAST_HEARTBEAT))
+        setMinimizeCount(ctx, json.getInt(KEY_MINIMIZE_COUNT)); setSnoozeUntil(ctx, json.getLong(KEY_SNOOZE_UNTIL))
+        setWarnHours(ctx, json.getDouble(KEY_WARN_HOURS).toFloat()); setRestHours(ctx, json.getDouble(KEY_REST_HOURS).toFloat())
+        setClockMode(ctx, json.getInt(KEY_CLOCK_MODE)); setClockDuration(ctx, json.getInt(KEY_CLOCK_DURATION))
+        setHudMode(ctx, json.getInt(KEY_HUD_MODE)); setHudDuration(ctx, json.getInt(KEY_HUD_DURATION))
+        setHudTextSize(ctx, json.getDouble(KEY_HUD_TEXT_SIZE).toFloat()); setHudMargin(ctx, json.getInt(KEY_HUD_MARGIN_OFFSET)); true
+    } catch (_: Exception) { false }
 }
