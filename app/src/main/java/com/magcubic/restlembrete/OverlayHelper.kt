@@ -23,12 +23,12 @@ import android.widget.TextView
 object OverlayHelper {
 
     private var hudRightView: TextView? = null
-    private var hudLeftView: TextView? = null
+    private var hudLeftView: TextView? = null; private var alertaAtivo = false
 
-    private fun tocarAlerta() {
+    private fun tocarAlerta() { if (!alertaAtivo) return
         val tom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
         tom.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1_200)
-        Handler(Looper.getMainLooper()).postDelayed({ tom.release() }, 1_300)
+        Handler(Looper.getMainLooper()).postDelayed({ tom.release(); tocarAlerta() }, 1_300)
     }
 
     private fun criarBotaoTv(
@@ -199,7 +199,7 @@ object OverlayHelper {
         onFecharTeste: () -> Unit = {}
     ) {
         try {
-            tocarAlerta()
+            alertaAtivo = true; tocarAlerta()
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
             val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -254,7 +254,7 @@ object OverlayHelper {
             blink.start()
 
             val closeAction: () -> Unit = {
-                blink.cancel()
+                blink.cancel(); alertaAtivo = false
                 try {
                     wm.removeView(root)
                 } catch (_: Exception) {}
