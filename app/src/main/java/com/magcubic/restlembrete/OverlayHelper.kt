@@ -24,11 +24,25 @@ object OverlayHelper {
 
     private var hudRightView: TextView? = null
     private var hudLeftView: TextView? = null
+    private val alertaHandler = Handler(Looper.getMainLooper())
+    private var alertaTom: ToneGenerator? = null
+    private val alertaRepetido = object : Runnable {
+        override fun run() {
+            alertaTom?.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 800)
+            alertaHandler.postDelayed(this, 1_300)
+        }
+    }
 
-    private fun tocarAlerta() {
-        val tom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
-        tom.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1_200)
-        Handler(Looper.getMainLooper()).postDelayed({ tom.release() }, 1_300)
+    private fun iniciarAlerta() {
+        pararAlerta()
+        alertaTom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
+        alertaHandler.post(alertaRepetido)
+    }
+
+    private fun pararAlerta() {
+        alertaHandler.removeCallbacks(alertaRepetido)
+        alertaTom?.release()
+        alertaTom = null
     }
 
     private fun criarBotaoTv(
@@ -199,7 +213,7 @@ object OverlayHelper {
         onFecharTeste: () -> Unit = {}
     ) {
         try {
-            tocarAlerta()
+            iniciarAlerta()
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
             val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -208,7 +222,8 @@ object OverlayHelper {
                 @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
             @Suppress("DEPRECATION")
-            val flags = WindowManager.LayoutParams.FLAG_FULLSCREEN or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            // Não esconde as telas do próprio Android, como o menu do botão de desligar.
+            val flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -255,6 +270,7 @@ object OverlayHelper {
 
             val closeAction: () -> Unit = {
                 blink.cancel()
+                pararAlerta()
                 try {
                     wm.removeView(root)
                 } catch (_: Exception) {}
@@ -272,6 +288,7 @@ object OverlayHelper {
                 }
             }
         } catch (e: Exception) {
+            pararAlerta()
             e.printStackTrace()
         }
     }

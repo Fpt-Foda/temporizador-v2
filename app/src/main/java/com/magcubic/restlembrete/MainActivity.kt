@@ -22,19 +22,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
-    private val importarHistorico = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            val texto = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            val importou = texto != null && Prefs.importarHistorico(this, texto)
-            Toast.makeText(this, if (importou) "✅ Histórico do V1 importado!" else "⚠️ Esse arquivo não é um histórico válido.", Toast.LENGTH_LONG).show()
-            if (importou) atualizarTextos()
-        }
-    }
 
     private lateinit var txtWarn: TextView
     private lateinit var txtRest: TextView
@@ -50,7 +42,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var txtHudMode: TextView
     private lateinit var txtHudDur: TextView
 
-    private val stepHours = 0.5f
+    private val stepHours = 10f / 60f
     private val handler = Handler(Looper.getMainLooper())
 
     private val refreshRunnable = object : Runnable {
@@ -330,9 +322,6 @@ class MainActivity : AppCompatActivity() {
                 atualizarStatus()
             }
         }
-        val btnImportarHistorico = criarBotaoTv("📥 Importar Histórico do V1").apply {
-            setOnClickListener { importarHistorico.launch(arrayOf("application/json", "text/plain")) }
-        }
 
         val btnAtualizar = criarBotaoTv("⬆️ Procurar Atualização").apply {
             setOnClickListener { verificarAtualizacao(mostrarResultado = true) }
@@ -349,7 +338,6 @@ class MainActivity : AppCompatActivity() {
         aplicarMargem(btnIniciar)
         aplicarMargem(btnTeste10s)
         aplicarMargem(btnZerarMemoria)
-        aplicarMargem(btnImportarHistorico)
         aplicarMargem(btnAtualizar)
 
         layout.addView(titulo)
@@ -378,7 +366,6 @@ class MainActivity : AppCompatActivity() {
         layout.addView(btnIniciar)
         layout.addView(btnTeste10s)
         layout.addView(btnZerarMemoria)
-        layout.addView(btnImportarHistorico)
         layout.addView(btnAtualizar)
 
         scroll.addView(layout)
@@ -493,13 +480,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun ajustarWarn(delta: Float) {
-        val novo = (Prefs.getWarnHours(this) + delta).coerceIn(0.5f, 24f)
+        val novo = (Prefs.getWarnHours(this) + delta).coerceIn(stepHours, 24f)
         Prefs.setWarnHours(this, novo)
         atualizarTextos()
     }
 
     private fun ajustarRest(delta: Float) {
-        val novo = (Prefs.getRestHours(this) + delta).coerceIn(0.5f, 24f)
+        val novo = (Prefs.getRestHours(this) + delta).coerceIn(stepHours, 24f)
         Prefs.setRestHours(this, novo)
         atualizarTextos()
     }
@@ -560,7 +547,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun formatarHoras(h: Float): String {
         val horas = h.toInt()
-        val minutos = ((h - horas) * 60).toInt()
+        val minutos = ((h - horas) * 60).roundToInt()
         return if (minutos == 0) "${horas}h" else "${horas}h${minutos}min"
     }
 }

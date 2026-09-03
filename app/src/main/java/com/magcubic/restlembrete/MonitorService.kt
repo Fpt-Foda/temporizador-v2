@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 class MonitorService : Service() {
 
@@ -25,6 +26,7 @@ class MonitorService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var warningShowing = false
+    private var testPending = false
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     private var clockVisibleUntilMs = 0L
@@ -56,9 +58,13 @@ class MonitorService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_TRIGGER_TEST) {
+            if (warningShowing || testPending) return START_STICKY
+            testPending = true
             handler.postDelayed({
-                showWarningOverlay(isTest = true)
+                if (!warningShowing) showWarningOverlay(isTest = true)
+                else testPending = false
             }, 8_000)
+            return START_STICKY
         } else if (intent?.action == ACTION_UPDATE_HUD) {
             updateHudState()
         }
@@ -73,6 +79,8 @@ class MonitorService : Service() {
     }
 
     private fun checkState() {
+        if (testPending) return
+
         val now = System.currentTimeMillis()
         val snoozeUntil = Prefs.getSnoozeUntil(this)
         if (snoozeUntil > now) return
@@ -171,12 +179,16 @@ class MonitorService : Service() {
         val restHours = Prefs.getRestHours(this)
 
         val warnHorasInt = warnHours.toInt()
-        val warnMinInt = ((warnHours - warnHorasInt) * 60).toInt()
+        val warnMinInt = ((warnHours - warnHorasInt) * 60).roundToInt()
         val warnTexto = if (warnMinInt == 0) "${warnHorasInt}H" else "${warnHorasInt}H ${warnMinInt}MIN"
 
         val restHorasInt = restHours.toInt()
-        val restMinInt = ((restHours - restHorasInt) * 60).toInt()
-        val restTexto = if (restMinInt == 0) "${restHorasInt}h" else "${restHorasInt}h ${restMinInt}min"
+        val restMinInt = ((restHours - restHorasInt) * 60).roundToInt()
+        val restTexto = when {
+            restHorasInt == 0 -> "${restMinInt}min"
+            restMinInt == 0 -> "${restHorasInt}h"
+            else -> "${restHorasInt}h ${restMinInt}min"
+        }
 
         val titulo = "⚠️ PROJETOR LIGADO HÁ $warnTexto ⚠️"
         val mensagem = "Desligue por $restTexto para deixar descansar."
@@ -215,6 +227,7 @@ class MonitorService : Service() {
 
     private fun onUserChoseFecharTeste() {
         warningShowing = false
+        testPending = false
     }
 
     private fun buildNotification(): Notification {
