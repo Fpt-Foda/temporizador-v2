@@ -27,7 +27,6 @@ import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
-
     private lateinit var txtWarn: TextView
     private lateinit var txtRest: TextView
     private lateinit var txtStatusPermissao: TextView
@@ -42,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var txtHudMode: TextView
     private lateinit var txtHudDur: TextView
 
-    private val stepHours = 10f / 60f
+    private val stepMinutes = 10
     private val handler = Handler(Looper.getMainLooper())
 
     private val refreshRunnable = object : Runnable {
@@ -141,9 +140,9 @@ class MainActivity : AppCompatActivity() {
         val linhaWarn = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            addView(criarBotaoTv(" - ").apply { setOnClickListener { ajustarWarn(-stepHours) } })
+            addView(criarBotaoTv(" - ").apply { setOnClickListener { ajustarWarn(-stepMinutes) } })
             addView(txtWarn)
-            addView(criarBotaoTv(" + ").apply { setOnClickListener { ajustarWarn(stepHours) } })
+            addView(criarBotaoTv(" + ").apply { setOnClickListener { ajustarWarn(stepMinutes) } })
         }
 
         val labelRest = TextView(this).apply { text = "Tempo de descanso exigido:"; textSize = 14f; setTextColor(Color.WHITE); setPadding(0, 10, 0, 5) }
@@ -151,9 +150,9 @@ class MainActivity : AppCompatActivity() {
         val linhaRest = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            addView(criarBotaoTv(" - ").apply { setOnClickListener { ajustarRest(-stepHours) } })
+            addView(criarBotaoTv(" - ").apply { setOnClickListener { ajustarRest(-stepMinutes) } })
             addView(txtRest)
-            addView(criarBotaoTv(" + ").apply { setOnClickListener { ajustarRest(stepHours) } })
+            addView(criarBotaoTv(" + ").apply { setOnClickListener { ajustarRest(stepMinutes) } })
         }
 
         // --- AJUSTE DE POSIÇÃO (MARGEM DO LIMITE DA TELA) ---
@@ -479,16 +478,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun ajustarWarn(delta: Float) {
-        val novo = (Prefs.getWarnHours(this) + delta).coerceIn(stepHours, 24f)
-        Prefs.setWarnHours(this, novo)
+    private fun ajustarWarn(deltaMinutes: Int) {
+        val atualMinutos = (Prefs.getWarnHours(this) * 60).roundToInt()
+        val novoMinutos = (atualMinutos + deltaMinutes).coerceIn(stepMinutes, 24 * 60)
+        Prefs.setWarnHours(this, novoMinutos / 60f)
         atualizarTextos()
+        notificarHudUpdate()
     }
 
-    private fun ajustarRest(delta: Float) {
-        val novo = (Prefs.getRestHours(this) + delta).coerceIn(stepHours, 24f)
-        Prefs.setRestHours(this, novo)
+    private fun ajustarRest(deltaMinutes: Int) {
+        val atualMinutos = (Prefs.getRestHours(this) * 60).roundToInt()
+        val novoMinutos = (atualMinutos + deltaMinutes).coerceIn(stepMinutes, 24 * 60)
+        Prefs.setRestHours(this, novoMinutos / 60f)
         atualizarTextos()
+        notificarHudUpdate()
     }
 
     private fun atualizarTextos() {
@@ -546,8 +549,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun formatarHoras(h: Float): String {
-        val horas = h.toInt()
-        val minutos = ((h - horas) * 60).roundToInt()
+        val totalMinutos = (h * 60).roundToInt()
+        val horas = totalMinutos / 60
+        val minutos = totalMinutos % 60
         return if (minutos == 0) "${horas}h" else "${horas}h${minutos}min"
     }
 }

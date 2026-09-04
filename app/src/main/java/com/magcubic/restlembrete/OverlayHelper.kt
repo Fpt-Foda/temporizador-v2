@@ -23,26 +23,12 @@ import android.widget.TextView
 object OverlayHelper {
 
     private var hudRightView: TextView? = null
-    private var hudLeftView: TextView? = null
-    private val alertaHandler = Handler(Looper.getMainLooper())
-    private var alertaTom: ToneGenerator? = null
-    private val alertaRepetido = object : Runnable {
-        override fun run() {
-            alertaTom?.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 800)
-            alertaHandler.postDelayed(this, 1_300)
-        }
-    }
+    private var hudLeftView: TextView? = null; private var alertaAtivo = false
 
-    private fun iniciarAlerta() {
-        pararAlerta()
-        alertaTom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
-        alertaHandler.post(alertaRepetido)
-    }
-
-    private fun pararAlerta() {
-        alertaHandler.removeCallbacks(alertaRepetido)
-        alertaTom?.release()
-        alertaTom = null
+    private fun tocarAlerta() { if (!alertaAtivo) return
+        val tom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
+        tom.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1_200)
+        Handler(Looper.getMainLooper()).postDelayed({ tom.release(); tocarAlerta() }, 1_300)
     }
 
     private fun criarBotaoTv(
@@ -213,7 +199,7 @@ object OverlayHelper {
         onFecharTeste: () -> Unit = {}
     ) {
         try {
-            iniciarAlerta()
+            alertaAtivo = true; tocarAlerta()
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
             val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -222,7 +208,7 @@ object OverlayHelper {
                 @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
             @Suppress("DEPRECATION")
-            // Não esconde as telas do próprio Android, como o menu do botão de desligar.
+            // Mantém o aviso, mas permite ver o menu Android do botão de desligar.
             val flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 
             val params = WindowManager.LayoutParams(
@@ -269,8 +255,7 @@ object OverlayHelper {
             blink.start()
 
             val closeAction: () -> Unit = {
-                blink.cancel()
-                pararAlerta()
+                blink.cancel(); alertaAtivo = false
                 try {
                     wm.removeView(root)
                 } catch (_: Exception) {}
@@ -288,7 +273,6 @@ object OverlayHelper {
                 }
             }
         } catch (e: Exception) {
-            pararAlerta()
             e.printStackTrace()
         }
     }

@@ -25,8 +25,7 @@ class MonitorService : Service() {
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private var warningShowing = false
-    private var testPending = false
+    private var warningShowing = false; private var testPending = false
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     private var clockVisibleUntilMs = 0L
@@ -57,14 +56,10 @@ class MonitorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_TRIGGER_TEST) {
-            if (warningShowing || testPending) return START_STICKY
-            testPending = true
+        if (intent?.action == ACTION_TRIGGER_TEST) { if (warningShowing || testPending) return START_STICKY; testPending = true
             handler.postDelayed({
-                if (!warningShowing) showWarningOverlay(isTest = true)
-                else testPending = false
-            }, 8_000)
-            return START_STICKY
+                if (!warningShowing) showWarningOverlay(isTest = true) else testPending = false
+            }, 8_000); return START_STICKY
         } else if (intent?.action == ACTION_UPDATE_HUD) {
             updateHudState()
         }
@@ -78,9 +73,7 @@ class MonitorService : Service() {
         return START_STICKY
     }
 
-    private fun checkState() {
-        if (testPending) return
-
+    private fun checkState() { if (testPending) return
         val now = System.currentTimeMillis()
         val snoozeUntil = Prefs.getSnoozeUntil(this)
         if (snoozeUntil > now) return
@@ -178,12 +171,14 @@ class MonitorService : Service() {
         val warnHours = Prefs.getWarnHours(this)
         val restHours = Prefs.getRestHours(this)
 
-        val warnHorasInt = warnHours.toInt()
-        val warnMinInt = ((warnHours - warnHorasInt) * 60).roundToInt()
+        val warnTotalMinutos = (warnHours * 60).roundToInt()
+        val warnHorasInt = warnTotalMinutos / 60
+        val warnMinInt = warnTotalMinutos % 60
         val warnTexto = if (warnMinInt == 0) "${warnHorasInt}H" else "${warnHorasInt}H ${warnMinInt}MIN"
 
-        val restHorasInt = restHours.toInt()
-        val restMinInt = ((restHours - restHorasInt) * 60).roundToInt()
+        val restTotalMinutos = (restHours * 60).roundToInt()
+        val restHorasInt = restTotalMinutos / 60
+        val restMinInt = restTotalMinutos % 60
         val restTexto = when {
             restHorasInt == 0 -> "${restMinInt}min"
             restMinInt == 0 -> "${restHorasInt}h"
@@ -225,9 +220,8 @@ class MonitorService : Service() {
         Prefs.setSnoozeUntil(this, System.currentTimeMillis() + (minutos * 60 * 1000L))
     }
 
-    private fun onUserChoseFecharTeste() {
+    private fun onUserChoseFecharTeste() { testPending = false
         warningShowing = false
-        testPending = false
     }
 
     private fun buildNotification(): Notification {
