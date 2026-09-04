@@ -208,7 +208,8 @@ object OverlayHelper {
                 @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
             @Suppress("DEPRECATION")
-            val flags = WindowManager.LayoutParams.FLAG_FULLSCREEN or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            // Mantém o aviso, mas permite ver o menu Android do botão de desligar.
+            val flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
