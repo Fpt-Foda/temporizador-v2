@@ -179,7 +179,11 @@ class MonitorService : Service() {
         val restTotalMinutos = (restHours * 60).roundToInt()
         val restHorasInt = restTotalMinutos / 60
         val restMinInt = restTotalMinutos % 60
-        val restTexto = if (restMinInt == 0) "${restHorasInt}h" else "${restHorasInt}h ${restMinInt}min"
+        val restTexto = when {
+            restHorasInt == 0 -> "${restMinInt}min"
+            restMinInt == 0 -> "${restHorasInt}h"
+            else -> "${restHorasInt}h ${restMinInt}min"
+        }
 
         val titulo = "⚠️ PROJETOR LIGADO HÁ $warnTexto ⚠️"
         val mensagem = "Desligue por $restTexto para deixar descansar."
