@@ -15,6 +15,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
@@ -78,6 +79,23 @@ object OverlayHelper {
                 }
             }
             setTextColor(Color.WHITE)
+            // Alguns projetores não fazem esta troca de foco sozinhos.
+            // Assim as setas do controle sempre caminham entre os botões.
+            setOnKeyListener { view, keyCode, event ->
+                if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+                val direction = when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_UP -> View.FOCUS_UP
+                    KeyEvent.KEYCODE_DPAD_DOWN -> View.FOCUS_DOWN
+                    KeyEvent.KEYCODE_DPAD_LEFT -> View.FOCUS_LEFT
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> View.FOCUS_RIGHT
+                    else -> return@setOnKeyListener false
+                }
+                val next = view.focusSearch(direction)
+                if (next != null && next !== view) {
+                    next.requestFocus()
+                    true
+                } else false
+            }
         }
     }
 

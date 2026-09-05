@@ -86,6 +86,11 @@ object ReminderStore {
         saveReminders(context, reminders(context) + reminder)
     }
 
+    /** Substitui um lembrete mantendo o mesmo identificador. */
+    fun updateReminder(context: Context, reminder: ProjectorReminder) {
+        saveReminders(context, reminders(context).map { if (it.id == reminder.id) reminder else it })
+    }
+
     fun removeReminder(context: Context, id: String) {
         saveReminders(context, reminders(context).filterNot { it.id == id })
     }

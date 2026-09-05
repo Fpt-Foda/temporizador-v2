@@ -5,6 +5,9 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
+import android.view.KeyEvent
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -18,11 +21,17 @@ import java.util.UUID
 /** Tela simples para administrar nomes e lembretes no próprio projetor. */
 class ReminderActivity : AppCompatActivity() {
     private lateinit var content: LinearLayout
+    private var firstButton: Button? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(35, 25, 35, 35) }
-        setContentView(ScrollView(this).apply { setBackgroundColor(Color.parseColor("#121212")); addView(content) })
+        setContentView(ScrollView(this).apply {
+            setBackgroundColor(Color.parseColor("#121212"))
+            isFocusable = false
+            descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+            addView(content)
+        })
         redraw()
     }
 
@@ -33,6 +42,22 @@ class ReminderActivity : AppCompatActivity() {
     private fun button(text: String, color: Int = Color.parseColor("#2A2A2A")) = Button(this).apply {
         this.text = text; textSize = 15f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE)
         setBackgroundColor(color); isFocusable = true; isFocusableInTouchMode = true
+        setOnFocusChangeListener { _, focused ->
+            setBackgroundColor(if (focused) Color.parseColor("#FFD700") else color)
+            setTextColor(if (focused) Color.BLACK else Color.WHITE)
+        }
+        setOnKeyListener { view, keyCode, event ->
+            if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+            val direction = when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP -> View.FOCUS_UP
+                KeyEvent.KEYCODE_DPAD_DOWN -> View.FOCUS_DOWN
+                KeyEvent.KEYCODE_DPAD_LEFT -> View.FOCUS_LEFT
+                KeyEvent.KEYCODE_DPAD_RIGHT -> View.FOCUS_RIGHT
+                else -> return@setOnKeyListener false
+            }
+            val next = view.focusSearch(direction)
+            if (next != null && next !== view) { next.requestFocus(); true } else false
+        }
     }
 
     private fun addFull(view: android.view.View) {
@@ -41,6 +66,7 @@ class ReminderActivity : AppCompatActivity() {
 
     private fun redraw() {
         content.removeAllViews()
+        firstButton = null
         addFull(label("🔔 Pessoas e Lembretes", 23f, Color.CYAN))
         addFull(label("Os lembretes só aparecem se o monitoramento estiver ligado naquele horário.", 13f, Color.LTGRAY))
 
@@ -49,7 +75,17 @@ class ReminderActivity : AppCompatActivity() {
         addFull(label("Geral hoje: ${formatDuration(report.generalToday)}\nGeral neste mês: ${formatDuration(report.generalMonth)}", 15f, Color.WHITE))
         val best = report.peopleMonth.maxByOrNull { it.second }
         if (best != null && best.second > 0) addFull(label("Quem mais usou no mês: ${best.first.name} (${formatDuration(best.second)})", 15f, Color.CYAN))
-        addFull(button("+ Adicionar lembrete", Color.parseColor("#245B2B")).apply { setOnClickListener { addReminder() } })
+        addFull(button("⌨ Teclado próprio: ${if (useCustomKeyboard()) "LIGADO" else "DESLIGADO"}", Color.parseColor("#40506A")).apply {
+            setOnClickListener {
+                getSharedPreferences("projector_reminders", MODE_PRIVATE).edit()
+                    .putBoolean("use_custom_keyboard", !useCustomKeyboard()).apply()
+                redraw()
+            }
+        })
+        addFull(button("+ Adicionar lembrete", Color.parseColor("#245B2B")).apply {
+            firstButton = this
+            setOnClickListener { addReminder() }
+        })
         addFull(button("+ Adicionar pessoa").apply { setOnClickListener { addPerson() } })
 
         addFull(label("Pessoas", 18f, Color.YELLOW))
@@ -75,42 +111,53 @@ class ReminderActivity : AppCompatActivity() {
         reminders.forEach { reminder ->
             val time = "%02d:%02d".format(reminder.hour, reminder.minute)
             val days = daysText(reminder.days)
-            addFull(button("$time  •  ${reminder.title}\n${ReminderStore.personName(this, reminder.personId)} • $days\nToque para remover", Color.parseColor("#353535")).apply {
+            addFull(button("$time  •  ${reminder.title}\n${ReminderStore.personName(this, reminder.personId)} • $days\nOK: opções", Color.parseColor("#353535")).apply {
                 gravity = Gravity.START
                 setOnClickListener {
-                    AlertDialog.Builder(this@ReminderActivity).setTitle("Apagar lembrete?")
-                        .setMessage(reminder.title).setNegativeButton("Cancelar", null)
-                        .setPositiveButton("Apagar") { _, _ -> ReminderStore.removeReminder(this@ReminderActivity, reminder.id); redraw() }.show()
+                    AlertDialog.Builder(this@ReminderActivity).setTitle(reminder.title)
+                        .setMessage("Escolha uma ação para este lembrete.")
+                        .setNegativeButton("Apagar") { _, _ -> ReminderStore.removeReminder(this@ReminderActivity, reminder.id); redraw() }
+                        .setNeutralButton("Testar aviso") { _, _ -> OverlayHelper.showReminder(this@ReminderActivity, reminder.title) {} }
+                        .setPositiveButton("Editar") { _, _ -> addReminder(reminder) }
+                        .show()
                 }
             })
         }
         addFull(button("◀ Voltar ao Temporizador").apply { setOnClickListener { finish() } })
+        firstButton?.post { firstButton?.requestFocus() }
     }
 
     private fun addPerson() {
-        val input = EditText(this).apply { hint = "Nome, por exemplo: Vô"; setSingleLine(true) }
-        AlertDialog.Builder(this).setTitle("Adicionar pessoa").setView(input)
-            .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Salvar") { _, _ -> ReminderStore.addPerson(this, input.text.toString()); redraw() }.show()
+        showNameEditor("Nome da pessoa") { name ->
+            ReminderStore.addPerson(this, name)
+            redraw()
+        }
     }
 
-    private fun addReminder() {
+    private fun addReminder(existing: ProjectorReminder? = null) {
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(35, 10, 35, 0) }
-        val name = EditText(this).apply { hint = "Ex.: Hora do remédio"; setSingleLine(true) }
-        box.addView(name)
-        var hour = 20
-        var minute = 0
-        var personId: String? = null
-        var days = (1..7).toSet()
-        val time = label("Horário: 20:00", 20f, Color.CYAN).apply { gravity = Gravity.CENTER }
+        var reminderTitle = existing?.title.orEmpty()
+        val nameButton = button(if (reminderTitle.isEmpty()) "✎ Digitar nome do lembrete" else "✎ $reminderTitle", Color.parseColor("#303C54"))
+        nameButton.setOnClickListener {
+            showNameEditor("Nome do lembrete", reminderTitle) { typed ->
+                reminderTitle = typed
+                nameButton.text = "✎ $typed"
+            }
+        }
+        box.addView(nameButton)
+        var hour = existing?.hour ?: 20
+        var minute = existing?.minute ?: 0
+        var personId: String? = existing?.personId
+        var days = existing?.days ?: (1..7).toSet()
+        val time = label("", 20f, Color.CYAN).apply { gravity = Gravity.CENTER }
         fun updateTime() { time.text = "Horário: %02d:%02d".format(hour, minute) }
         val line = LinearLayout(this).apply { gravity = Gravity.CENTER }
         line.addView(button("Hora −").apply { setOnClickListener { hour = (hour + 23) % 24; updateTime() } })
         line.addView(button("Hora +").apply { setOnClickListener { hour = (hour + 1) % 24; updateTime() } })
         line.addView(button("Min −").apply { setOnClickListener { minute = (minute + 55) % 60; updateTime() } })
         line.addView(button("Min +").apply { setOnClickListener { minute = (minute + 5) % 60; updateTime() } })
-        box.addView(time); box.addView(line)
-        val personButton = button("Para: Geral")
+        updateTime(); box.addView(time); box.addView(line)
+        val personButton = button("")
         fun updatePerson() { personButton.text = "Para: ${ReminderStore.personName(this, personId)}" }
         personButton.setOnClickListener {
             val options = listOf("Geral") + ReminderStore.people(this).map { it.name }
@@ -119,8 +166,8 @@ class ReminderActivity : AppCompatActivity() {
                 updatePerson()
             }.show()
         }
-        box.addView(personButton)
-        val daysButton = button("Dias: Todos os dias")
+        updatePerson(); box.addView(personButton)
+        val daysButton = button("")
         fun updateDays() { daysButton.text = "Dias: ${daysText(days)}" }
         daysButton.setOnClickListener {
             val names = arrayOf("Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb")
@@ -133,21 +180,94 @@ class ReminderActivity : AppCompatActivity() {
                     updateDays()
                 }.show()
         }
-        box.addView(daysButton)
+        updateDays(); box.addView(daysButton)
         val duration = EditText(this).apply {
             hint = "Por quantos dias? Vazio = sem fim"; inputType = InputType.TYPE_CLASS_NUMBER
+            if ((existing?.endsAt ?: 0L) > 0L) {
+                val remaining = ((existing!!.endsAt - System.currentTimeMillis()) / 86_400_000L).coerceAtLeast(1L)
+                setText(remaining.toString())
+            }
         }
         box.addView(duration)
-        AlertDialog.Builder(this).setTitle("Novo lembrete").setView(box).setNegativeButton("Cancelar", null)
+        AlertDialog.Builder(this).setTitle(if (existing == null) "Novo lembrete" else "Editar lembrete").setView(box).setNegativeButton("Cancelar", null)
             .setPositiveButton("Salvar") { _, _ ->
-                val title = name.text.toString().trim()
+                val title = reminderTitle.trim()
                 if (title.isNotEmpty()) {
                     val count = duration.text.toString().toIntOrNull()
                     val endsAt = if (count != null && count > 0) Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, count) }.timeInMillis else 0L
-                    ReminderStore.addReminder(this, ProjectorReminder(UUID.randomUUID().toString(), title, hour, minute, personId, days, endsAt))
+                    val saved = ProjectorReminder(existing?.id ?: UUID.randomUUID().toString(), title, hour, minute, personId, days, endsAt)
+                    if (existing == null) ReminderStore.addReminder(this, saved) else ReminderStore.updateReminder(this, saved)
                     redraw()
                 }
             }.show()
+    }
+
+    /** Teclado próprio para o projetor: funciona só com as setas e tem acentos. */
+    private fun useCustomKeyboard() = getSharedPreferences("projector_reminders", MODE_PRIVATE)
+        .getBoolean("use_custom_keyboard", true)
+
+    private fun showNameEditor(title: String, initial: String = "", onSave: (String) -> Unit) {
+        if (useCustomKeyboard()) {
+            showTextEditor(title, initial, onSave)
+            return
+        }
+        val input = EditText(this).apply {
+            setSingleLine(true)
+            setText(initial)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        }
+        AlertDialog.Builder(this).setTitle(title).setView(input).setNegativeButton("Cancelar", null)
+            .setPositiveButton("Salvar") { _, _ -> onSave(input.text.toString()) }.show()
+    }
+
+    private fun showTextEditor(title: String, initial: String = "", onSave: (String) -> Unit) {
+        var upper = true
+        var firstKey: Button? = null
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(24, 8, 24, 0) }
+        val preview = label(initial, 24f, Color.CYAN).apply {
+            minHeight = 70
+            setBackgroundColor(Color.parseColor("#222222"))
+            setPadding(18, 12, 18, 12)
+        }
+        box.addView(preview)
+        fun setText(value: String) { preview.text = value.take(40) }
+        fun addKey(value: String) { setText(preview.text.toString() + if (upper) value.uppercase() else value.lowercase()) }
+        fun addRow(keys: List<String>) {
+            val row = LinearLayout(this).apply { gravity = Gravity.CENTER }
+            keys.forEach { key ->
+                val keyButton = button(key).apply {
+                    textSize = 13f
+                    minWidth = 0
+                    setPadding(5, 10, 5, 10)
+                    setOnClickListener { addKey(key) }
+                }
+                if (firstKey == null) firstKey = keyButton
+                row.addView(keyButton, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(2, 3, 2, 3) })
+            }
+            box.addView(row)
+        }
+        addRow(listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p"))
+        addRow(listOf("a", "s", "d", "f", "g", "h", "j", "k", "l", "ç"))
+        addRow(listOf("z", "x", "c", "v", "b", "n", "m", "á", "é", "í"))
+        addRow(listOf("à", "â", "ã", "ê", "ó", "ô", "õ", "ú", "ü", "-"))
+        val commands = LinearLayout(this).apply { gravity = Gravity.CENTER }
+        fun command(text: String, action: () -> Unit) = button(text, Color.parseColor("#40506A")).apply { setOnClickListener { action() } }
+        commands.addView(command("⇧ Maiúscula") { upper = !upper }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.4f))
+        commands.addView(command("Espaço") { setText(preview.text.toString() + " ") }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        commands.addView(command("⌫") { setText(preview.text.toString().dropLast(1)) }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, .7f))
+        box.addView(commands)
+        val dialog = AlertDialog.Builder(this).setTitle(title).setView(box)
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Salvar", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val value = preview.text.toString().trim()
+                if (value.isNotEmpty()) { dialog.dismiss(); onSave(value) }
+            }
+            firstKey?.post { firstKey?.requestFocus() }
+        }
+        dialog.show()
     }
 
     private fun daysText(days: Set<Int>): String {
