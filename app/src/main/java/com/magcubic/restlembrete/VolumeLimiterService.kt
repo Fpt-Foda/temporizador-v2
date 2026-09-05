@@ -1,6 +1,7 @@
 package com.magcubic.restlembrete
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -11,6 +12,7 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.accessibility.AccessibilityManager
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -150,6 +152,17 @@ class VolumeLimiterService : AccessibilityService() {
     }
 
     companion object {
+        /** Confere a permissão real do Android, não apenas o botão salvo no app. */
+        fun isAccessibilityEnabled(context: Context): Boolean {
+            val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+            return manager
+                .getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+                .any { info ->
+                    info.resolveInfo.serviceInfo.packageName == context.packageName &&
+                        info.resolveInfo.serviceInfo.name == VolumeLimiterService::class.java.name
+                }
+        }
+
         fun enforceLimit(context: Context) {
             if (!Prefs.isMsEnabled(context)) return
             val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager

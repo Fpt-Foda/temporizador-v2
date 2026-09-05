@@ -71,13 +71,16 @@ object Prefs {
     fun getHudMargin(ctx: Context): Int = prefs(ctx).getInt(KEY_HUD_MARGIN_OFFSET, 0)
     fun setHudMargin(ctx: Context, margin: Int) = prefs(ctx).edit().putInt(KEY_HUD_MARGIN_OFFSET, margin.coerceIn(0, 100)).apply()
 
-    fun isMsEnabled(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_MS_ENABLED, true)
+    // M-s só começa ligado depois que a permissão do Android estiver realmente ativa.
+    // Assim uma instalação nova nunca diz "ligado" sem poder funcionar.
+    fun isMsEnabled(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_MS_ENABLED, false)
     fun setMsEnabled(ctx: Context, enabled: Boolean) = prefs(ctx).edit().putBoolean(KEY_MS_ENABLED, enabled).apply()
 
     fun getMsLimit(ctx: Context): Int = prefs(ctx).getInt(KEY_MS_LIMIT, 50).coerceIn(1, 100)
     fun setMsLimit(ctx: Context, percent: Int) = prefs(ctx).edit().putInt(KEY_MS_LIMIT, percent.coerceIn(1, 100)).apply()
 
     fun getMsVisibleVolume(ctx: Context): Int = prefs(ctx).getInt(KEY_MS_VISIBLE_VOLUME, -1)
-    fun setMsVisibleVolume(ctx: Context, percent: Int) = prefs(ctx).edit().putInt(KEY_MS_VISIBLE_VOLUME, percent.coerceIn(0, 100)).apply()
+    // -1 significa "calcular pela posição real atual" na próxima ativação.
+    fun setMsVisibleVolume(ctx: Context, percent: Int) = prefs(ctx).edit().putInt(KEY_MS_VISIBLE_VOLUME, percent.coerceIn(-1, 100)).apply()
 
 }

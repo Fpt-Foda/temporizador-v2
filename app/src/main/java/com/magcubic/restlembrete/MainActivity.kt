@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     private val stepMinutes = 10
     private val handler = Handler(Looper.getMainLooper())
+    private var aguardandoPermissaoMs = false
 
     private val refreshRunnable = object : Runnable {
         override fun run() {
@@ -341,23 +342,7 @@ class MainActivity : AppCompatActivity() {
             }
             atualizarNome()
             setOnClickListener {
-                val ligado = !Prefs.isMsEnabled(this@MainActivity)
-                Prefs.setMsEnabled(this@MainActivity, ligado)
-                if (ligado) {
-                    Prefs.setMsVisibleVolume(this@MainActivity, -1)
-                    VolumeLimiterService.enforceLimit(this@MainActivity)
-                    AlertDialog.Builder(this@MainActivity)
-                        .setTitle("M-s ativo")
-                        .setMessage("Permissão de M-s requerida para usar em qualquer tela.")
-                        .setNegativeButton("Depois", null)
-                        .setPositiveButton("Abrir M-s") { _, _ ->
-                            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                        }
-                        .show()
-                } else {
-                    Toast.makeText(this@MainActivity, "M-s desligado. Controle normal liberado.", Toast.LENGTH_SHORT).show()
-                }
-                atualizarNome()
+                alternarMs { atualizarNome() }
             }
         }
 
@@ -421,7 +406,51 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (aguardandoPermissaoMs) {
+            aguardandoPermissaoMs = false
+            if (VolumeLimiterService.isAccessibilityEnabled(this)) {
+                Prefs.setMsEnabled(this, true)
+                Prefs.setMsVisibleVolume(this, -1)
+                VolumeLimiterService.enforceLimit(this)
+                Toast.makeText(this, "M-s ligado.", Toast.LENGTH_SHORT).show()
+            } else {
+                Prefs.setMsEnabled(this, false)
+                Toast.makeText(this, "M-s não foi ativado pelo Android.", Toast.LENGTH_LONG).show()
+            }
+        } else if (!VolumeLimiterService.isAccessibilityEnabled(this)) {
+            // Se o próprio projetor desligar a permissão, o app acompanha o estado real.
+            Prefs.setMsEnabled(this, false)
+        }
         handler.post(refreshRunnable)
+    }
+
+    private fun alternarMs(aoTerminar: () -> Unit = {}) {
+        if (Prefs.isMsEnabled(this)) {
+            Prefs.setMsEnabled(this, false)
+            Toast.makeText(this, "M-s desligado. Controle normal liberado.", Toast.LENGTH_SHORT).show()
+            aoTerminar()
+            return
+        }
+
+        if (VolumeLimiterService.isAccessibilityEnabled(this)) {
+            Prefs.setMsEnabled(this, true)
+            Prefs.setMsVisibleVolume(this, -1)
+            VolumeLimiterService.enforceLimit(this)
+            Toast.makeText(this, "M-s ligado.", Toast.LENGTH_SHORT).show()
+            aoTerminar()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("M-s")
+            .setMessage("Ative M-s na tela do Android. Ao voltar, o app confirma se deu certo.")
+            .setNegativeButton("Depois", null)
+            .setPositiveButton("Abrir M-s") { _, _ ->
+                aguardandoPermissaoMs = true
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            }
+            .show()
+        aoTerminar()
     }
 
     override fun onPause() {
@@ -486,22 +515,12 @@ class MainActivity : AppCompatActivity() {
         linha.addView(botao("+10", 10))
         val estadoMs = criarBotaoTv("").apply {
             fun atualizarEstado() {
-                text = if (Prefs.isMsEnabled(this@MainActivity)) "Desligar M-s" else "Ligar M-s"
+                text = if (Prefs.isMsEnabled(this@MainActivity) && VolumeLimiterService.isAccessibilityEnabled(this@MainActivity)) "Desligar M-s" else "Ligar M-s"
             }
             atualizarEstado()
             setOnClickListener {
-                val ligado = !Prefs.isMsEnabled(this@MainActivity)
-                Prefs.setMsEnabled(this@MainActivity, ligado)
-                if (ligado) {
-                    Prefs.setMsVisibleVolume(this@MainActivity, -1)
-                    VolumeLimiterService.enforceLimit(this@MainActivity)
-                }
+                alternarMs()
                 atualizarEstado()
-                Toast.makeText(
-                    this@MainActivity,
-                    if (ligado) "M-s ligado." else "M-s desligado. Controle normal liberado.",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
         }
         box.addView(valor)
