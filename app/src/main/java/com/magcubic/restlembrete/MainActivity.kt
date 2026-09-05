@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         return Button(this).apply {
             text = texto
             background = states
+            isAllCaps = false
             textSize = 13f
             typeface = Typeface.DEFAULT_BOLD
             isFocusable = true
@@ -334,6 +335,35 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { startActivity(Intent(this@MainActivity, ReminderActivity::class.java)) }
         }
 
+        val btnMs = criarBotaoTv("M-s", corPadrao = Color.parseColor("#33442B"), corFoco = Color.parseColor("#8BC34A")).apply {
+            fun atualizarNome() {
+                text = if (Prefs.isMsEnabled(this@MainActivity)) "M-s" else "M-s"
+            }
+            atualizarNome()
+            setOnClickListener {
+                val ligado = !Prefs.isMsEnabled(this@MainActivity)
+                Prefs.setMsEnabled(this@MainActivity, ligado)
+                if (ligado) {
+                    VolumeLimiterService.enforceLimit(this@MainActivity)
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("M-s ativo")
+                        .setMessage("Permissão de M-s requerida para usar em qualquer tela.")
+                        .setNegativeButton("Depois", null)
+                        .setPositiveButton("Abrir M-s") { _, _ ->
+                            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        }
+                        .show()
+                } else {
+                    Toast.makeText(this@MainActivity, "M-s desligado. Controle normal liberado.", Toast.LENGTH_SHORT).show()
+                }
+                atualizarNome()
+            }
+        }
+
+        val btnConfigMs = criarBotaoTv("Config M-s", corPadrao = Color.parseColor("#33442B"), corFoco = Color.parseColor("#8BC34A")).apply {
+            setOnClickListener { abrirConfigMs() }
+        }
+
         fun aplicarMargem(btn: Button) {
             btn.layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -347,6 +377,8 @@ class MainActivity : AppCompatActivity() {
         aplicarMargem(btnZerarMemoria)
         aplicarMargem(btnAtualizar)
         aplicarMargem(btnLembretes)
+        aplicarMargem(btnMs)
+        aplicarMargem(btnConfigMs)
 
         layout.addView(titulo)
         layout.addView(painelStatus)
@@ -375,6 +407,8 @@ class MainActivity : AppCompatActivity() {
         layout.addView(btnTeste10s)
         layout.addView(btnZerarMemoria)
         layout.addView(btnLembretes)
+        layout.addView(btnMs)
+        layout.addView(btnConfigMs)
         layout.addView(btnAtualizar)
 
         scroll.addView(layout)
@@ -424,6 +458,58 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun abrirConfigMs() {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(30, 20, 30, 10)
+        }
+        val valor = TextView(this).apply {
+            textSize = 24f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+        }
+        fun atualizar() { valor.text = "Limite: ${Prefs.getMsLimit(this@MainActivity)}%" }
+        val linha = LinearLayout(this).apply { gravity = Gravity.CENTER }
+        fun botao(texto: String, delta: Int) = criarBotaoTv(texto).apply {
+            setOnClickListener {
+                Prefs.setMsLimit(this@MainActivity, Prefs.getMsLimit(this@MainActivity) + delta)
+                VolumeLimiterService.enforceLimit(this@MainActivity)
+                atualizar()
+            }
+        }
+        linha.addView(botao("-10", -10))
+        linha.addView(botao("-1", -1))
+        linha.addView(botao("+1", 1))
+        linha.addView(botao("+10", 10))
+        val estadoMs = criarBotaoTv("").apply {
+            fun atualizarEstado() {
+                text = if (Prefs.isMsEnabled(this@MainActivity)) "Desligar M-s" else "Ligar M-s"
+            }
+            atualizarEstado()
+            setOnClickListener {
+                val ligado = !Prefs.isMsEnabled(this@MainActivity)
+                Prefs.setMsEnabled(this@MainActivity, ligado)
+                if (ligado) VolumeLimiterService.enforceLimit(this@MainActivity)
+                atualizarEstado()
+                Toast.makeText(
+                    this@MainActivity,
+                    if (ligado) "M-s ligado." else "M-s desligado. Controle normal liberado.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+        box.addView(valor)
+        box.addView(linha)
+        box.addView(estadoMs)
+        atualizar()
+        AlertDialog.Builder(this)
+            .setTitle("Config M-s")
+            .setMessage("Escolha o máximo real. A escala M-s pode ir até 100%, mas o valor real para neste limite.")
+            .setView(box)
+            .setNegativeButton("Fechar", null)
+            .show()
     }
 
     private fun setMargin(margin: Int) {
