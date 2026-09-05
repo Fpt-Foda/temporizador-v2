@@ -40,7 +40,7 @@ class ReminderActivity : AppCompatActivity() {
     }
 
     private fun button(text: String, color: Int = Color.parseColor("#2A2A2A")) = Button(this).apply {
-        this.text = text; textSize = 15f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE)
+        this.text = text; isAllCaps = false; textSize = 15f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE)
         setBackgroundColor(color); isFocusable = true; isFocusableInTouchMode = true
         setOnFocusChangeListener { _, focused ->
             setBackgroundColor(if (focused) Color.parseColor("#FFD700") else color)
@@ -222,7 +222,9 @@ class ReminderActivity : AppCompatActivity() {
 
     private fun showTextEditor(title: String, initial: String = "", onSave: (String) -> Unit) {
         var upper = true
+        var capsLock = false
         var firstKey: Button? = null
+        val keyButtons = mutableListOf<Pair<String, Button>>()
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(24, 8, 24, 0) }
         val preview = label(initial, 24f, Color.CYAN).apply {
             minHeight = 70
@@ -231,7 +233,20 @@ class ReminderActivity : AppCompatActivity() {
         }
         box.addView(preview)
         fun setText(value: String) { preview.text = value.take(40) }
-        fun addKey(value: String) { setText(preview.text.toString() + if (upper) value.uppercase() else value.lowercase()) }
+        lateinit var shiftButton: Button
+        lateinit var lockButton: Button
+        fun refreshKeyboard() {
+            val showUpper = upper || capsLock
+            keyButtons.forEach { (key, button) -> button.text = if (showUpper) key.uppercase() else key.lowercase() }
+            shiftButton.text = if (upper && !capsLock) "⇧ Próxima: MAIÚSCULA" else "⇧ Próxima: minúscula"
+            lockButton.text = if (capsLock) "⇪ TRAVAR: LIGADO" else "⇪ Travar maiúsculas"
+        }
+        fun addKey(value: String) {
+            val showUpper = upper || capsLock
+            setText(preview.text.toString() + if (showUpper) value.uppercase() else value.lowercase())
+            if (!capsLock) upper = false
+            refreshKeyboard()
+        }
         fun addRow(keys: List<String>) {
             val row = LinearLayout(this).apply { gravity = Gravity.CENTER }
             keys.forEach { key ->
@@ -242,6 +257,7 @@ class ReminderActivity : AppCompatActivity() {
                     setOnClickListener { addKey(key) }
                 }
                 if (firstKey == null) firstKey = keyButton
+                keyButtons.add(key to keyButton)
                 row.addView(keyButton, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(2, 3, 2, 3) })
             }
             box.addView(row)
@@ -252,10 +268,14 @@ class ReminderActivity : AppCompatActivity() {
         addRow(listOf("à", "â", "ã", "ê", "ó", "ô", "õ", "ú", "ü", "-"))
         val commands = LinearLayout(this).apply { gravity = Gravity.CENTER }
         fun command(text: String, action: () -> Unit) = button(text, Color.parseColor("#40506A")).apply { setOnClickListener { action() } }
-        commands.addView(command("⇧ Maiúscula") { upper = !upper }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.4f))
-        commands.addView(command("Espaço") { setText(preview.text.toString() + " ") }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        shiftButton = command("") { upper = !upper; refreshKeyboard() }
+        lockButton = command("") { capsLock = !capsLock; if (capsLock) upper = true; refreshKeyboard() }
+        commands.addView(shiftButton, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.15f))
+        commands.addView(lockButton, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.15f))
+        commands.addView(command("Espaço") { setText(preview.text.toString() + " "); if (!capsLock) upper = true; refreshKeyboard() }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         commands.addView(command("⌫") { setText(preview.text.toString().dropLast(1)) }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, .7f))
         box.addView(commands)
+        refreshKeyboard()
         val dialog = AlertDialog.Builder(this).setTitle(title).setView(box)
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Salvar", null)

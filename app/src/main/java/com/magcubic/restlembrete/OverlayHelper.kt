@@ -9,6 +9,8 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.media.AudioManager
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
 import android.media.ToneGenerator
 import android.os.Build
 import android.os.Handler
@@ -27,6 +29,43 @@ object OverlayHelper {
     private var hudLeftView: TextView? = null; private var alertaAtivo = false
     private var reminderView: LinearLayout? = null
     private var personPickerView: LinearLayout? = null
+    private var audioManager: AudioManager? = null
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private val audioFocusListener = AudioManager.OnAudioFocusChangeListener { }
+
+    /** Faz YouTube e outros players liberarem o áudio enquanto o aviso está na tela. */
+    private fun ocuparAudio(context: Context) {
+        try {
+            val manager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager = manager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                    .setAudioAttributes(AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build())
+                    .setOnAudioFocusChangeListener { }
+                    .build()
+                manager.requestAudioFocus(audioFocusRequest!!)
+            } else {
+                @Suppress("DEPRECATION")
+                manager.requestAudioFocus(audioFocusListener, AudioManager.STREAM_ALARM, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+            }
+        } catch (_: Exception) { }
+    }
+
+    private fun liberarAudio() {
+        try {
+            val manager = audioManager ?: return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioFocusRequest != null) {
+                manager.abandonAudioFocusRequest(audioFocusRequest!!)
+            } else {
+                @Suppress("DEPRECATION") manager.abandonAudioFocus(audioFocusListener)
+            }
+        } catch (_: Exception) { }
+        audioFocusRequest = null
+        audioManager = null
+    }
 
     private fun tocarAlerta() { if (!alertaAtivo) return
         val tom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
@@ -60,6 +99,7 @@ object OverlayHelper {
 
         return Button(context).apply {
             text = texto
+            isAllCaps = false
             background = states
             textSize = 16f
             typeface = Typeface.DEFAULT_BOLD
@@ -262,7 +302,7 @@ object OverlayHelper {
     fun showReminder(context: Context, title: String, onClose: () -> Unit) {
         if (reminderView != null) return
         try {
-            alertaAtivo = true; tocarAlerta()
+            alertaAtivo = true; ocuparAudio(context); tocarAlerta()
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
             val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -281,17 +321,24 @@ object OverlayHelper {
                 setTextColor(Color.RED); gravity = Gravity.CENTER
             })
             root.addView(TextView(context).apply {
-                text = title; textSize = 28f; typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE); gravity = Gravity.CENTER; setPadding(0, 30, 0, 35)
+                text = title; textSize = 44f; typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.YELLOW); gravity = Gravity.CENTER; setPadding(0, 30, 0, 18)
+            })
+            root.addView(TextView(context).apply {
+                text = "Aperte OK ou Voltar quando terminar."; textSize = 20f
+                setTextColor(Color.WHITE); gravity = Gravity.CENTER; setPadding(0, 20, 0, 35)
             })
             fun close() {
-                alertaAtivo = false
+                alertaAtivo = false; liberarAudio()
                 try { wm.removeView(root) } catch (_: Exception) {}
                 reminderView = null
                 onClose()
             }
             val ok = criarBotaoTv(context, "OK — Entendi", Color.parseColor("#245B2B")).apply {
                 setOnClickListener { close() }
+                setOnKeyListener { _, code, event ->
+                    if (code == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) { close(); true } else false
+                }
             }
             root.addView(ok, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
             root.setOnKeyListener { _, code, event ->
@@ -300,7 +347,7 @@ object OverlayHelper {
             reminderView = root
             wm.addView(root, params)
             root.requestFocus(); ok.post { ok.requestFocus() }
-        } catch (_: Exception) { alertaAtivo = false; onClose() }
+        } catch (_: Exception) { alertaAtivo = false; liberarAudio(); onClose() }
     }
 
     // --- TELA CHEIA DE AVISO ---
@@ -315,7 +362,7 @@ object OverlayHelper {
         onFecharTeste: () -> Unit = {}
     ) {
         try {
-            alertaAtivo = true; tocarAlerta()
+            alertaAtivo = true; ocuparAudio(context); tocarAlerta()
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
             val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -350,17 +397,27 @@ object OverlayHelper {
                 gravity = Gravity.CENTER
             }
 
+            val parts = mensagem.split("\n\n", limit = 2)
             val mensagemView = TextView(context).apply {
-                text = mensagem
+                text = parts.firstOrNull().orEmpty()
                 setTextColor(Color.YELLOW)
                 textSize = 28f
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                setPadding(0, 20, 0, 35)
+                setPadding(0, 20, 0, 0)
+            }
+
+            val instructionView = TextView(context).apply {
+                text = parts.getOrNull(1).orEmpty()
+                setTextColor(Color.WHITE)
+                textSize = 21f
+                gravity = Gravity.CENTER
+                setPadding(0, 75, 0, 35)
             }
 
             root.addView(tituloView)
             root.addView(mensagemView)
+            root.addView(instructionView)
 
             wm.addView(root, params)
 
@@ -372,7 +429,7 @@ object OverlayHelper {
             blink.start()
 
             val closeAction: () -> Unit = {
-                blink.cancel(); alertaAtivo = false
+                blink.cancel(); alertaAtivo = false; liberarAudio()
                 try {
                     wm.removeView(root)
                 } catch (_: Exception) {}
@@ -390,6 +447,7 @@ object OverlayHelper {
                 }
             }
         } catch (e: Exception) {
+            liberarAudio()
             e.printStackTrace()
         }
     }
