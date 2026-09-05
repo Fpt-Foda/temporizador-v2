@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">Temporizador V2 — Teste</string>
     <string name="update_repository">Fpt-Foda/temporizador-v2</string>
-    <string name="ms_accessibility_description">Permissão de M-s requerida para manter o M-s ativo.</string>
 </resources>

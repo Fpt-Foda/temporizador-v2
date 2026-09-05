@@ -22,11 +22,6 @@ object Prefs {
     private const val KEY_HUD_TEXT_SIZE = "hud_text_size"
     private const val KEY_HUD_MARGIN_OFFSET = "hud_margin_offset" // Distância da borda em px (0 = colado)
 
-    // M-s: limite de volume. O valor visível pode ir até 100%, mas o som real
-    // nunca passa deste limite enquanto o M-s estiver ligado.
-    private const val KEY_MS_ENABLED = "ms_enabled"
-    private const val KEY_MS_LIMIT = "ms_limit"
-    private const val KEY_MS_VISIBLE_VOLUME = "ms_visible_volume"
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
@@ -70,17 +65,5 @@ object Prefs {
     // Margem em pixels até o limite da tela (0 = encostado no limite)
     fun getHudMargin(ctx: Context): Int = prefs(ctx).getInt(KEY_HUD_MARGIN_OFFSET, 0)
     fun setHudMargin(ctx: Context, margin: Int) = prefs(ctx).edit().putInt(KEY_HUD_MARGIN_OFFSET, margin.coerceIn(0, 100)).apply()
-
-    // M-s só começa ligado depois que a permissão do Android estiver realmente ativa.
-    // Assim uma instalação nova nunca diz "ligado" sem poder funcionar.
-    fun isMsEnabled(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_MS_ENABLED, false)
-    fun setMsEnabled(ctx: Context, enabled: Boolean) = prefs(ctx).edit().putBoolean(KEY_MS_ENABLED, enabled).apply()
-
-    fun getMsLimit(ctx: Context): Int = prefs(ctx).getInt(KEY_MS_LIMIT, 50).coerceIn(1, 100)
-    fun setMsLimit(ctx: Context, percent: Int) = prefs(ctx).edit().putInt(KEY_MS_LIMIT, percent.coerceIn(1, 100)).apply()
-
-    fun getMsVisibleVolume(ctx: Context): Int = prefs(ctx).getInt(KEY_MS_VISIBLE_VOLUME, -1)
-    // -1 significa "calcular pela posição real atual" na próxima ativação.
-    fun setMsVisibleVolume(ctx: Context, percent: Int) = prefs(ctx).edit().putInt(KEY_MS_VISIBLE_VOLUME, percent.coerceIn(-1, 100)).apply()
 
 }
