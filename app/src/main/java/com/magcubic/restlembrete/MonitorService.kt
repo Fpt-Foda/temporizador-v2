@@ -10,11 +10,13 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Calendar
 import kotlin.math.roundToInt
 
 class MonitorService : Service() {
@@ -26,6 +28,8 @@ class MonitorService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var warningShowing = false; private var testPending = false
+    private var sessionReady = false
+    private var reminderShowing = false
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     private var clockVisibleUntilMs = 0L
@@ -37,10 +41,12 @@ class MonitorService : Service() {
         override fun run() {
             // Adiciona 1 segundo de uso a cada segundo rodando
             Prefs.addUsedSeconds(this@MonitorService, 1L)
+            ReminderStore.addUsageSecond(this@MonitorService, if (sessionReady) ReminderStore.activePersonId(this@MonitorService) else null)
             Prefs.setLastHeartbeat(this@MonitorService, System.currentTimeMillis())
 
             checkState()
             updateHudState()
+            checkReminders()
 
             handler.postDelayed(this, 1000)
         }
@@ -53,6 +59,7 @@ class MonitorService : Service() {
             Prefs.setLastHeartbeat(this, System.currentTimeMillis())
         }
         handler.post(tick)
+        askWhoIsUsing()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -84,6 +91,28 @@ class MonitorService : Service() {
         if (usedSeconds >= warnSeconds && !warningShowing) {
             showWarningOverlay(isTest = false)
         }
+    }
+
+    private fun askWhoIsUsing() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            sessionReady = true
+            return
+        }
+        OverlayHelper.showPersonPicker(this, ReminderStore.people(this)) { personId ->
+            ReminderStore.setActivePerson(this, personId)
+            sessionReady = true
+        }
+    }
+
+    /** Só toca se o projetor/app estiver ligado neste minuto. Avisos atrasados são ignorados. */
+    private fun checkReminders() {
+        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (!power.isInteractive || !sessionReady || reminderShowing || warningShowing) return
+        val now = Calendar.getInstance()
+        val reminder = ReminderStore.reminders(this).firstOrNull { ReminderStore.shouldShow(this, it, now) } ?: return
+        ReminderStore.markShown(this, reminder, now)
+        reminderShowing = true
+        OverlayHelper.showReminder(this, reminder.title) { reminderShowing = false }
     }
 
     private fun updateHudState() {
@@ -186,7 +215,7 @@ class MonitorService : Service() {
         }
 
         val titulo = "⚠️ PROJETOR LIGADO HÁ $warnTexto ⚠️"
-        val mensagem = "Desligue por $restTexto para deixar descansar."
+        val mensagem = "⚠️ DESCANSO OBRIGATÓRIO: $restTexto ⚠️\n\nDesligue o projetor agora para ele descansar."
 
         OverlayHelper.show(
             this,

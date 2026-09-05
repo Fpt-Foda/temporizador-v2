@@ -36,3 +36,16 @@ Cole o resultado em `KEYSTORE_BASE64`.
 No GitHub, abra a aba **Actions**, escolha **Gerar APK de atualização**, clique em **Run workflow** e informe uma versão maior, por exemplo `v1.0`. A automação gera um APK assinado e cria uma Release.
 
 Instale esta primeira versão pelo APK da Release. Depois, sempre que você enviar código novo, volte em **Actions**, execute o fluxo com uma versão maior (`v1.1`, depois `v1.2`...) e instale a atualização pelo próprio app, sem USB.
+
+## Jeito padrão e mais rápido de atualizar
+
+Este é o caminho que deve ser usado normalmente:
+
+1. Fazer as alterações no projeto aberto no **Android Studio**.
+2. Abrir o **GitHub Desktop**, escrever um resumo curto, clicar em **Commit to main** e depois em **Push origin**.
+3. Abrir o site do GitHub somente para ir em **Actions > Gerar APK de atualização > Run workflow**.
+4. Informar a próxima versão (`v1.6`, `v1.7`...) e aguardar o APK aparecer na página de Releases.
+
+O site do GitHub não deve ser usado para editar os arquivos no dia a dia. Ele fica apenas para gerar, validar e deixar disponível a nova atualização. Assim é mais rápido e evita conflitos.
+
+Se aparecer alguma tela de login, senha ou confirmação do GitHub, a pessoa dona da conta confirma. Fora isso, o processo pode ser feito normalmente pelo assistente.

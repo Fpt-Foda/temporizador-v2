@@ -326,6 +326,14 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { verificarAtualizacao(mostrarResultado = true) }
         }
 
+        val btnLembretes = criarBotaoTv(
+            "🔔 Pessoas e Lembretes",
+            corPadrao = Color.parseColor("#244A66"),
+            corFoco = Color.parseColor("#53C8FF")
+        ).apply {
+            setOnClickListener { startActivity(Intent(this@MainActivity, ReminderActivity::class.java)) }
+        }
+
         fun aplicarMargem(btn: Button) {
             btn.layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -338,6 +346,7 @@ class MainActivity : AppCompatActivity() {
         aplicarMargem(btnTeste10s)
         aplicarMargem(btnZerarMemoria)
         aplicarMargem(btnAtualizar)
+        aplicarMargem(btnLembretes)
 
         layout.addView(titulo)
         layout.addView(painelStatus)
@@ -365,6 +374,7 @@ class MainActivity : AppCompatActivity() {
         layout.addView(btnIniciar)
         layout.addView(btnTeste10s)
         layout.addView(btnZerarMemoria)
+        layout.addView(btnLembretes)
         layout.addView(btnAtualizar)
 
         scroll.addView(layout)

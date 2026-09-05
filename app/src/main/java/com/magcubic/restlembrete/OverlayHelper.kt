@@ -24,6 +24,8 @@ object OverlayHelper {
 
     private var hudRightView: TextView? = null
     private var hudLeftView: TextView? = null; private var alertaAtivo = false
+    private var reminderView: LinearLayout? = null
+    private var personPickerView: LinearLayout? = null
 
     private fun tocarAlerta() { if (!alertaAtivo) return
         val tom = ToneGenerator(AudioManager.STREAM_ALARM, 100)
@@ -187,6 +189,102 @@ object OverlayHelper {
         }
     }
 
+    /** Tela de escolha da sessão. Voltar e Pular fazem a mesma coisa. */
+    fun showPersonPicker(context: Context, people: List<ReminderPerson>, onChosen: (String?) -> Unit) {
+        if (personPickerView != null) return
+        try {
+            val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
+            val root = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setBackgroundColor(Color.BLACK)
+                setPadding(55, 40, 55, 40)
+                isFocusableInTouchMode = true
+            }
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+                type, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, PixelFormat.TRANSLUCENT
+            )
+            val title = TextView(context).apply {
+                text = "Quem está usando?"
+                textSize = 30f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER; setPadding(0, 0, 0, 25)
+            }
+            root.addView(title)
+            fun choose(id: String?) {
+                try { wm.removeView(root) } catch (_: Exception) {}
+                personPickerView = null
+                onChosen(id)
+            }
+            people.forEach { person ->
+                root.addView(criarBotaoTv(context, person.name).apply {
+                    setOnClickListener { choose(person.id) }
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 5, 0, 5) }
+                })
+            }
+            val skip = criarBotaoTv(context, "Pular", Color.parseColor("#404040")).apply {
+                setOnClickListener { choose(null) }
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 16, 0, 0) }
+            }
+            root.addView(skip)
+            root.setOnKeyListener { _, code, event ->
+                if (code == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) { choose(null); true } else false
+            }
+            personPickerView = root
+            wm.addView(root, params)
+            root.requestFocus()
+            skip.post { skip.requestFocus() }
+        } catch (_: Exception) { onChosen(null) }
+    }
+
+    /** Aviso de lembrete: fecha com Voltar, OK ou botão central do controle. */
+    fun showReminder(context: Context, title: String, onClose: () -> Unit) {
+        if (reminderView != null) return
+        try {
+            alertaAtivo = true; tocarAlerta()
+            val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
+            val root = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+                setBackgroundColor(Color.BLACK); setPadding(50, 40, 50, 40)
+                isFocusableInTouchMode = true
+            }
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+                type, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, PixelFormat.TRANSLUCENT
+            )
+            root.addView(TextView(context).apply {
+                text = "⚠️ LEMBRETE ⚠️"; textSize = 36f; typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.RED); gravity = Gravity.CENTER
+            })
+            root.addView(TextView(context).apply {
+                text = title; textSize = 28f; typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE); gravity = Gravity.CENTER; setPadding(0, 30, 0, 35)
+            })
+            fun close() {
+                alertaAtivo = false
+                try { wm.removeView(root) } catch (_: Exception) {}
+                reminderView = null
+                onClose()
+            }
+            val ok = criarBotaoTv(context, "OK — Entendi", Color.parseColor("#245B2B")).apply {
+                setOnClickListener { close() }
+            }
+            root.addView(ok, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+            root.setOnKeyListener { _, code, event ->
+                if (event.action == KeyEvent.ACTION_UP && (code == KeyEvent.KEYCODE_BACK || code == KeyEvent.KEYCODE_ENTER || code == KeyEvent.KEYCODE_DPAD_CENTER)) { close(); true } else false
+            }
+            reminderView = root
+            wm.addView(root, params)
+            root.requestFocus(); ok.post { ok.requestFocus() }
+        } catch (_: Exception) { alertaAtivo = false; onClose() }
+    }
+
     // --- TELA CHEIA DE AVISO ---
     fun show(
         context: Context,
@@ -236,8 +334,9 @@ object OverlayHelper {
 
             val mensagemView = TextView(context).apply {
                 text = mensagem
-                setTextColor(Color.WHITE)
-                textSize = 21f
+                setTextColor(Color.YELLOW)
+                textSize = 28f
+                typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
                 setPadding(0, 20, 0, 35)
             }
