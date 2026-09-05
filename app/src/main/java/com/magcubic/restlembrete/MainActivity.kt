@@ -344,6 +344,7 @@ class MainActivity : AppCompatActivity() {
                 val ligado = !Prefs.isMsEnabled(this@MainActivity)
                 Prefs.setMsEnabled(this@MainActivity, ligado)
                 if (ligado) {
+                    Prefs.setMsVisibleVolume(this@MainActivity, -1)
                     VolumeLimiterService.enforceLimit(this@MainActivity)
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle("M-s ativo")
@@ -491,7 +492,10 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener {
                 val ligado = !Prefs.isMsEnabled(this@MainActivity)
                 Prefs.setMsEnabled(this@MainActivity, ligado)
-                if (ligado) VolumeLimiterService.enforceLimit(this@MainActivity)
+                if (ligado) {
+                    Prefs.setMsVisibleVolume(this@MainActivity, -1)
+                    VolumeLimiterService.enforceLimit(this@MainActivity)
+                }
                 atualizarEstado()
                 Toast.makeText(
                     this@MainActivity,

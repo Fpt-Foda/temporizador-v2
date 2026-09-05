@@ -51,7 +51,7 @@
         <service
             android:name=".VolumeLimiterService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="false"
+            android:exported="true"
             android:label="M-s">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

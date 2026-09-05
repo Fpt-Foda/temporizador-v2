@@ -1,7 +1,6 @@
 package com.magcubic.restlembrete
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -30,9 +29,9 @@ class VolumeLimiterService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        serviceInfo = serviceInfo.apply {
-            flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
-        }
+        // A solicitação para filtrar as teclas já está no arquivo de configuração
+        // do serviço. Evitar trocar a configuração em tempo real impede que alguns
+        // Androids simplificados encerrem o M-s logo após a ativação.
         enforceLimit(this)
     }
 
@@ -160,7 +159,11 @@ class VolumeLimiterService : AccessibilityService() {
                 audio.setStreamVolume(AudioManager.STREAM_MUSIC, limitIndex, 0)
             }
             if (Prefs.getMsVisibleVolume(context) < 0) {
-                Prefs.setMsVisibleVolume(context, (audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100f / max).roundToInt())
+                // Converte o nível que já estava no projetor para a escala M-s.
+                // Ex.: 50% real com limite 50% vira 100% na barra, sem queda.
+                val realPercent = (audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100f / max).roundToInt()
+                val visiblePercent = (realPercent * 100f / Prefs.getMsLimit(context)).roundToInt().coerceIn(0, 100)
+                Prefs.setMsVisibleVolume(context, visiblePercent)
             }
         }
     }
