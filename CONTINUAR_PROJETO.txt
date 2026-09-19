@@ -1,0 +1,149 @@
+TEMPORIZADOR V2 — CONTINUAÇÃO DO PROJETO
+==========================================
+
+PASTA OFICIAL DO PROJETO
+------------------------
+Esta é a pasta oficial para abrir e editar daqui para frente:
+
+C:\Users\fptfo\OneDrive\Desktop\0\Produtos\TemporizadorV2
+
+Não apagar a cópia antiga ainda. Ela fica como segurança adicional.
+
+O QUE É ESTE APP
+----------------
+É um app Android para o projetor. Ele monitora há quanto tempo o projetor está
+ligado, avisa quando chega a hora de descansar, permite lembretes de horário,
+pessoas/perfis e mostra relatórios de uso.
+
+VERSÃO E REPOSITÓRIO
+--------------------
+Nome visível do app: Temporizador V2
+Pacote Android: com.magcubic.restlembrete.v2
+Repositório GitHub: https://github.com/Fpt-Foda/temporizador-v2
+Última versão confirmada: v1.12
+Último APK confirmado:
+https://github.com/Fpt-Foda/temporizador-v2/releases/download/v1.12/app-release.apk
+
+IMPORTANTE: a V2 foi criada separada da V1 para poder testar sem apagar nem
+misturar os dados do app antigo.
+
+NOME E ÍCONE OFICIAIS (19/09/2026)
+------------------------------------
+O nome mostrado no projetor, no ícone e na lista de aplicativos é:
+Temporizador V2
+
+O sufixo “— Teste” saiu somente do nome visível. O modo de teste interno foi
+mantido e a V2 continua separada tecnicamente, com o pacote
+com.magcubic.restlembrete.v2.
+
+O ícone oficial usado é este PNG, sem criar uma logo nova:
+assets\icones\TemporizadorV2_icone_2D_OFICIAL.png
+
+Ele foi configurado para Android moderno (ícone adaptável) e aparelhos antigos
+(ícones PNG em todos os tamanhos). O projetor pode exibir uma moldura mais
+retangular no atalho, mas a arte não deve ser esticada ou achatada.
+
+Os ícones antigos foram guardados aqui antes da troca:
+assets\backup_icones_anteriores_2026-09-19
+
+COMO ABRIR NO ANDROID STUDIO
+----------------------------
+1. Abra o Android Studio.
+2. Clique em Open.
+3. Escolha esta pasta inteira:
+   C:\Users\fptfo\OneDrive\Desktop\0\Produtos\TemporizadorV2
+4. Espere o Android Studio carregar e sincronizar.
+5. Para testar no projetor, conecte-o e aperte o botão verde Run.
+
+ARQUIVOS IMPORTANTES
+--------------------
+app\src\main\java\com\magcubic\restlembrete\MainActivity.kt
+  Tela principal e opções do app.
+
+app\src\main\java\com\magcubic\restlembrete\MonitorService.kt
+  Monitora o tempo de uso do projetor e controla os avisos.
+
+app\src\main\java\com\magcubic\restlembrete\OverlayHelper.kt
+  Desenha os avisos grandes que aparecem por cima da tela.
+
+app\src\main\java\com\magcubic\restlembrete\Prefs.kt
+  Salva configurações, tempos e escolhas do usuário.
+
+app\src\main\java\com\magcubic\restlembrete\ReminderActivity.kt
+  Tela de pessoas, lembretes e relatórios.
+
+app\src\main\java\com\magcubic\restlembrete\ReminderStore.kt
+  Salva pessoas, lembretes e histórico de uso.
+
+app\src\main\java\com\magcubic\restlembrete\UpdateChecker.kt
+  Procura atualizações no GitHub quando o app abre e baixa o APK novo.
+
+app\src\main\AndroidManifest.xml
+  Permissões e serviços do Android.
+
+.github\workflows\release.yml
+  Receita que o GitHub usa para gerar o APK automaticamente.
+
+ATUALIZACAO_GITHUB.md
+  Instruções mais detalhadas da atualização pelo GitHub.
+
+O QUE O APP FAZ HOJE
+--------------------
+- Mostra a hora e o tempo restante sem segundos.
+- Usa ícone de relógio no horário atual e ampulheta no tempo restante.
+- Avisa em tela grande quando o tempo de uso acaba.
+- Mostra quanto tempo o projetor ficou ligado e quanto tempo deve descansar.
+- O aviso pode tocar som repetido até ser fechado.
+- Voltar fecha o aviso, mas o monitoramento continua por trás.
+- Há modo de teste para conferir os avisos sem esperar o tempo real.
+- Tem pessoas/perfis, lembretes por horário, lembretes gerais e relatórios.
+- Pode procurar e instalar atualização do próprio app pelo GitHub.
+
+COISAS QUE FORAM REMOVIDAS
+--------------------------
+A opção M-s / limite escondido de volume foi removida na v1.12.
+O projetor HY300 Pro+ desligava sozinho a permissão do Android necessária para
+essa função. Não colocar isso de volta sem testar primeiro em uma cópia V3.
+
+COMO FAZER UMA ATUALIZAÇÃO NOVA
+-------------------------------
+1. Edite o projeto nesta pasta oficial no Android Studio.
+2. Teste no projetor pelo Android Studio se possível.
+3. Abra o GitHub Desktop e confirme que ele está apontando para este projeto.
+4. No GitHub Desktop: escreva um resumo, clique em Commit to main e depois em
+   Push origin.
+5. Só use Pull origin se o GitHub Desktop avisar que existem mudanças no GitHub
+   que ainda não estão no computador. A ordem normal é: Commit, Push.
+6. Entre no GitHub no navegador, abra o repositório e vá em Actions.
+7. Abra o fluxo “Gerar APK de atualização”.
+8. Clique em Run workflow, coloque a nova versão (exemplo: v1.13) e confirme.
+9. Espere aparecer Success.
+10. Abra Releases e baixe o arquivo TemporizadorV2.apk da versão nova.
+11. Instale o APK por cima da V2 no projetor.
+
+ATUALIZAÇÃO AUTOMÁTICA NO PROJETOR
+----------------------------------
+Quando uma versão mais nova existe no GitHub, o app V2 procura atualização ao
+abrir. Ele mostra a opção de baixar; depois o Android pede confirmação para
+instalar. Nada é instalado escondido sem confirmação do Android.
+
+GITHUB ACTIONS E SEGREDOS
+-------------------------
+O GitHub monta um APK assinado usando os Secrets do repositório. Nunca colocar
+senhas, códigos ou chaves dentro deste projeto, em mensagem, ou em arquivo TXT.
+Se os Secrets forem apagados, a geração de APK assinado pelo GitHub precisará
+ser configurada novamente.
+
+BACKUP
+------
+Esta pasta contém o código e as configurações necessárias para continuar o
+projeto. Não inclui lixo temporário (cache, builds antigos ou arquivos do Git),
+porque eles não são necessários e o Android Studio/GitHub os recriam.
+
+Também existe um backup ZIP antigo na Área de Trabalho:
+Backup_TemporizadorV2_2026-09-07_1404.zip
+
+REGRA IMPORTANTE
+----------------
+Para ideias arriscadas ou testes grandes, criar uma cópia V3 antes de mexer na
+V2 oficial. Assim o app que está funcionando no projetor não corre risco.

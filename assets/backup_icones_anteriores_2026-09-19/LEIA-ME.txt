@@ -1,0 +1,12 @@
+BACKUP DOS ÍCONES ANTERIORES
+=============================
+
+Data do backup: 19/09/2026
+
+Estes arquivos eram os ícones padrão do Android usados pelo Temporizador V2
+antes da troca para a logo oficial do projetor com cronômetro.
+
+Foram guardados antes de qualquer substituição. Não apagar esta pasta.
+
+Para restaurar o visual antigo no futuro, use os arquivos daqui apenas em uma
+cópia de teste do projeto, não diretamente na V2 oficial.
