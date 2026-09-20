@@ -48,4 +48,10 @@ Este é o caminho que deve ser usado normalmente:
 
 O site do GitHub não deve ser usado para editar os arquivos no dia a dia. Ele fica apenas para gerar, validar e deixar disponível a nova atualização. Assim é mais rápido e evita conflitos.
 
+## Endereço atual do projeto
+
+O username atual é `Fpt-Fodedor` e o repositório oficial é
+`https://github.com/Fpt-Fodedor/temporizador-v2`. Use esse endereço em novos
+links, no GitHub Desktop e em futuras configurações do atualizador.
+
 Se aparecer alguma tela de login, senha ou confirmação do GitHub, a pessoa dona da conta confirma. Fora isso, o processo pode ser feito normalmente pelo assistente.

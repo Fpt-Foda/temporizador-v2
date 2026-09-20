@@ -19,10 +19,10 @@ VERSÃO E REPOSITÓRIO
 --------------------
 Nome visível do app: Temporizador V2
 Pacote Android: com.magcubic.restlembrete.v2
-Repositório GitHub: https://github.com/Fpt-Foda/temporizador-v2
+Repositório GitHub: https://github.com/Fpt-Fodedor/temporizador-v2
 Última versão confirmada: v1.12
 Último APK confirmado:
-https://github.com/Fpt-Foda/temporizador-v2/releases/download/v1.12/app-release.apk
+https://github.com/Fpt-Fodedor/temporizador-v2/releases/download/v1.12/app-release.apk
 
 IMPORTANTE: a V2 foi criada separada da V1 para poder testar sem apagar nem
 misturar os dados do app antigo.
@@ -45,6 +45,26 @@ retangular no atalho, mas a arte não deve ser esticada ou achatada.
 
 Os ícones antigos foram guardados aqui antes da troca:
 assets\backup_icones_anteriores_2026-09-19
+
+PAINEL HORIZONTAL DO PROJETOR (20/09/2026)
+------------------------------------------------
+O painel inferior do HY300 usa uma área horizontal diferente da grade normal
+de Aplicativos. Para ela, existe um banner separado, com fundo preto e a
+mesma logo oficial centralizada em tamanho maior, sem esticar a arte:
+assets\icones\TemporizadorV2_banner_painel_projetor.png
+
+No Android, este banner está configurado no Manifest como
+android:banner="@drawable/projector_banner". O ícone quadrado normal foi
+mantido para a grade de Aplicativos.
+
+GITHUB — USERNAME ATUALIZADO (20/09/2026)
+------------------------------------------------
+O username do GitHub mudou de Fpt-Foda para Fpt-Fodedor. O repositório atual é:
+https://github.com/Fpt-Fodedor/temporizador-v2
+
+O atualizador interno do app usa Fpt-Fodedor/temporizador-v2. O GitHub mantém
+um redirecionamento temporário do endereço antigo, mas novos ajustes devem usar
+sempre o endereço novo acima.
 
 COMO ABRIR NO ANDROID STUDIO
 ----------------------------
