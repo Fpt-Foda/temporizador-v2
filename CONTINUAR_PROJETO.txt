@@ -53,6 +53,12 @@ de Aplicativos. Para ela, existe um banner separado, com fundo preto e a
 mesma logo oficial centralizada em tamanho maior, sem esticar a arte:
 assets\icones\TemporizadorV2_banner_painel_projetor.png
 
+Após o primeiro teste no projetor, o fundo preto funcionou, mas o desenho ainda
+ficou pequeno. Em 20/09/2026 o desenho foi ampliado para aproximadamente o
+dobro dentro do mesmo banner, sem alterar o ícone quadrado da grade. A versão
+anterior do banner foi guardada aqui:
+assets\backup_banner_horizontal_2026-09-20
+
 No Android, este banner está configurado no Manifest como
 android:banner="@drawable/projector_banner". O ícone quadrado normal foi
 mantido para a grade de Aplicativos.
