@@ -63,6 +63,17 @@ No Android, este banner está configurado no Manifest como
 android:banner="@drawable/projector_banner". O ícone quadrado normal foi
 mantido para a grade de Aplicativos.
 
+ÍCONE DA GRADE DE APLICATIVOS (1x1)
+
+O HY300 também exibe o app em uma grade quadrada. Esse ícone agora usa uma
+versão própria, com a mesma logo oficial centralizada e uma margem preta de
+segurança para não ser cortada pela moldura do projetor:
+assets\icones\TemporizadorV2_icone_quadrado_grade.png
+
+Ele é separado do banner horizontal da barra inferior. A cópia dos recursos
+da grade antes deste ajuste está em:
+assets\backup_icones_grade_antes_de_ajuste_2026-09-20
+
 GITHUB — USERNAME ATUALIZADO (20/09/2026)
 ------------------------------------------------
 O username do GitHub mudou de Fpt-Foda para Fpt-Fodedor. O repositório atual é:
