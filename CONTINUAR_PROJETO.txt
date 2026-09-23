@@ -63,6 +63,12 @@ No Android, este banner está configurado no Manifest como
 android:banner="@drawable/projector_banner". O ícone quadrado normal foi
 mantido para a grade de Aplicativos.
 
+CENTRALIZAÇÃO DOS INDICADORES SUPERIORES
+
+Os dois indicadores do topo (hora atual à esquerda e tempo restante à direita)
+centralizam agora o texto dentro do retângulo preto. Esta é somente uma
+correção visual: não altera a posição dos indicadores, os tempos ou o serviço.
+
 ÍCONE DA GRADE DE APLICATIVOS (1x1)
 
 O HY300 também exibe o app em uma grade quadrada. Esse ícone agora usa uma

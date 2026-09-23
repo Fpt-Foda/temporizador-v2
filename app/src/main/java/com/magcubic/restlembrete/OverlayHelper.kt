@@ -165,6 +165,8 @@ object OverlayHelper {
                     setBackgroundColor(Color.parseColor("#E6000000"))
                     setTextColor(Color.WHITE)
                     typeface = Typeface.MONOSPACE
+                    gravity = Gravity.CENTER
+                    includeFontPadding = false
                     setPadding(16, 6, 16, 6)
                 }
                 wm.addView(hudRightView, params)
@@ -219,6 +221,8 @@ object OverlayHelper {
                     setBackgroundColor(Color.parseColor("#E6000000"))
                     setTextColor(Color.WHITE)
                     typeface = Typeface.MONOSPACE
+                    gravity = Gravity.CENTER
+                    includeFontPadding = false
                     setPadding(16, 6, 16, 6)
                 }
                 wm.addView(hudLeftView, params)
