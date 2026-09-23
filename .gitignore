@@ -13,3 +13,8 @@ local.properties
 *.jks
 *.keystore
 .gradle-user/
+
+# Arquivos locais que não fazem parte do aplicativo publicado.
+GPT-5.6 Terra Ultra - Recomendações.txt
+assets/icones/TemporizadorV2_icone_2D_OFICIAL_transparente_contorno_preto_android_fundo_preto_1024.png
+backups/
