@@ -69,6 +69,21 @@ Os dois indicadores do topo (hora atual à esquerda e tempo restante à direita)
 centralizam agora o texto dentro do retângulo preto. Esta é somente uma
 correção visual: não altera a posição dos indicadores, os tempos ou o serviço.
 
+LOGO TRANSPARENTE OFICIAL
+
+A logo padrão agora é o PNG oficial com transparência e contorno preto:
+assets\icones\TemporizadorV2_icone_2D_OFICIAL_transparente_contorno_preto.png
+
+Ela foi recortada somente nas bordas vazias e redimensionada sem esticar em
+dois formatos separados: a grade quadrada 1x1 usa
+assets\icones\TemporizadorV2_icone_quadrado_grade_transparente.png, e o
+painel inferior horizontal usa
+assets\icones\TemporizadorV2_banner_painel_projetor_transparente.png.
+
+Ambos preservam a proporção larga da logo e não têm fundo próprio. Os recursos
+anteriores foram guardados em:
+assets\backup_logo_transparente_antes_da_troca_2026-09-23
+
 ÍCONE DA GRADE DE APLICATIVOS (1x1)
 
 O HY300 também exibe o app em uma grade quadrada. Esse ícone agora usa uma

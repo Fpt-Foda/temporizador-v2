@@ -1,0 +1,79 @@
+GPT-5.6 Terra Ultra - Recomendações
+Data da análise: 19/09/2026
+Criador: Fpt Fodedor
+
+PROJETO: Temporizador V2
+
+SITUAÇÃO ATUAL
+Este é um projeto Android para monitorar o uso e o descanso de um projetor. Ele possui serviço em primeiro plano, avisos em sobreposição, lembretes, perfis, relatórios e atualização por Release do GitHub. A V2 deve continuar protegida como versão utilizável; mudanças arriscadas pertencem primeiro a uma cópia V3.
+
+DIRETRIZ DE APLICATIVO PRÓPRIO
+Não se aplica a regra de janela de desktop com minimizar, maximizar e fechar. O Temporizador V2 já deve se comportar como aplicativo Android próprio, com nome, ícone, telas e avisos coerentes com o uso no projetor.
+
+PRIORIDADES PARA CONTINUAR
+1. Preservar a V2 oficial:
+   antes de alterar comportamento relevante, criar uma cópia V3 para experimentar. Não recolocar a antiga função M-s/limite escondido de volume sem prova real no projetor, pois ela já esbarrou em restrições do aparelho.
+
+2. Testar o monitoramento no equipamento real:
+   validar início, reinício do Android, permissão de sobreposição, notificação do serviço, modo de economia de bateria, aviso de descanso, adiamento, fechamento e retorno do HUD. O projetor HY300 e o Android podem encerrar serviços de modo diferente de um telefone ou emulador.
+
+3. Melhorar a confiabilidade e o consumo antes de acrescentar recursos:
+   revisar se o contador consegue recuperar o tempo corretamente após pausa, reinício ou encerramento do processo; evitar gravações persistentes desnecessárias a cada segundo; calcular duração de modo resistente a atrasos; e manter qualquer uso de wake lock estritamente temporário e justificável.
+
+4. Manter o HUD legível à distância:
+   conferir separadamente os dois ramos principais: hora atual e tempo restante. Testar texto, contraste, margem, tamanho, aviso dos últimos cinco minutos, tela clara/escura e diferentes resoluções do projetor.
+
+5. Deixar o estado fácil de entender:
+   a tela principal deve mostrar, sem termos técnicos, se a sobreposição está autorizada, se o monitor está ativo, quanto tempo foi usado, quanto falta e o que acontece quando o aviso aparecer. Mensagens de falha devem indicar a ação seguinte.
+
+6. Proteger a atualização:
+   para cada versão, confirmar código da versão, assinatura estável, execução bem-sucedida da automação, Release publicada e APK correto visível para baixar. O Android deve continuar pedindo confirmação antes da instalação. Nunca colocar chaves, senhas ou segredos no projeto ou em arquivos de documentação.
+
+7. Corrigir referências de continuidade antes da próxima manutenção:
+   alguns textos ainda citam a pasta antiga Projetos. O local oficial atual analisado é:
+   C:\Users\fptfo\OneDrive\Desktop\0\Produtos\TemporizadorV2
+   Atualizar referências somente numa manutenção documental consciente, preservando as cópias de segurança.
+
+VALIDAÇÃO ANTES DE PUBLICAR UMA NOVA VERSÃO
+- abrir e usar no projetor real;
+- conferir os avisos normal, de teste e dos últimos cinco minutos;
+- confirmar boot/reinício e permissões;
+- testar lembretes, perfis e relatórios;
+- validar download e instalação de uma Release de teste;
+- manter a versão anterior instalável e o backup recuperável.
+
+IDENTIDADE, CRIADOR E ÍCONE
+O aplicativo deve identificar Fpt Fodedor como criador em uma área Sobre/Créditos. Usar nome e ícone adaptativo próprios no projetor/Android, coerentes com temporizador e descanso do projetor, sem reaproveitar ícone genérico de outro produto. Antes de gerar a imagem, escrever um prompt exclusivo para este app.
+
+ÍCONE OFICIAL DEFINIDO EM 19/09/2026
+Arquivo oficial aprovado: assets\icones\TemporizadorV2_icone_2D_OFICIAL.png.
+Ele representa projetor + cronômetro e usa a identidade atual preto, branco e
+amarelo: #000000 + #FFFFFF + #F8D000. Preservar a versão anterior em
+assets\icones como referência histórica; não substituir nenhuma das duas sem
+guardar uma nova cópia e decidir conscientemente qual será a oficial.
+
+Quando Fpt Fodedor enviar uma foto pessoal, decidir antes em qual tela ela faz sentido, preferencialmente Sobre/Créditos ou apresentação. Não colocar a foto automaticamente no HUD de uso ou nos avisos críticos.
+
+REGRA VISUAL GERAL DEFINIDA PELO CRIADOR
+Usar por padrão a paleta oficial atual: #000000 + #FFFFFF + #F8D000. Fundo preto puro (#000000); símbolos, ícones, títulos, textos, linhas e controles em branco (#FFFFFF); amarelo vivo/dourado (#F8D000) somente em pequeno detalhe funcional. Não usar quarta cor, cinza, grafite, variações de tonalidade, transparência visual, gradientes, brilho, sombra, vidro, metal, textura ou efeitos 3D.
+
+TEMA VISUAL PADRÃO
+As telas, diálogos, relatórios e avisos do app devem usar tema escuro como padrão: fundo preto puro, texto claro e contraste alto para leitura à distância no projetor. Um eventual tema claro só deve existir se for escolha explícita do usuário, nunca como padrão.
+
+IDENTIDADE DA INTERFACE — NÃO SÓ DO ÍCONE
+Ao abrir o Temporizador V2, telas, diálogos, HUD, avisos, relatórios, perfis,
+permissões e atualização devem continuar a identidade do ícone: preto #000000
+como base, branco #FFFFFF para texto, relógio e estrutura e amarelo #F8D000
+somente para tempo em foco, ação principal, progresso, estado ativo ou aviso
+essencial. O amarelo não deve virar cor de fundo; a leitura à distância no
+projetor e as exigências do Android continuam acima de enfeite visual.
+
+ATUALIZAÇÃO DO ÍCONE MESTRE OFICIAL — 23/09/2026
+A referência visual oficial atual passa a ser:
+assets\icones\TemporizadorV2_icone_2D_OFICIAL_transparente_contorno_preto.png
+Ela tem fundo externo transparente e contorno preto fino. A versão anterior
+com fundo preto continua preservada como histórico. Nenhum recurso do APK nem
+ícone instalado no projetor foi substituído automaticamente nesta mudança.
+
+OBSERVAÇÃO
+Nenhum código, APK, build, repositório ou Release foi alterado nesta análise.
